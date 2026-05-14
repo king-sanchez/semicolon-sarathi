@@ -1,74 +1,244 @@
-# 🇮🇳 Semicolon-Sarathi (AdhikarSaarthi)
+# Government Scheme Eligibility AI Assistant
 
-**Semicolon-Sarathi** is a centralized digital platform built to connect Indian citizens with government welfare schemes. By collecting basic user profiles (Age, Income, Category, State, etc.) through a simple conversational interface, it automatically filters and matches users to central and state government schemes they are eligible for.
+An AI-powered application that helps Indian citizens discover eligible government schemes from both Central and State governments based on their profile.
 
-Built during a 24-hour hackathon to reduce dependency on intermediaries and simplify scheme discovery.
+## Features
 
-## 🚀 Tech Stack
-*   **Frontend & UI:** Streamlit (Python)
-*   **Database:** JSON (`schemes.json`)
-*   **AI Integration:** Prepared for Google Gemini API
+- 🤖 **AI-Powered Search**: Uses Google Gemini AI to search and recommend government schemes
+- 🎯 **Personalized Results**: Schemes tailored to user's age, income, occupation, state, and category
+- 📋 **Comprehensive Information**: Provides eligibility criteria, benefits, required documents, and application process
+- 🔔 **Email Notifications**: Get notified when new eligible schemes are available
+- 🌐 **Central & State Schemes**: Covers schemes from both central and state governments
 
----
+## Tech Stack
 
-## 💻 How to Run This Locally
+- **Frontend**: Next.js 15, React 18, TypeScript
+- **Backend**: Node.js, Express
+- **Database**: PostgreSQL with Prisma ORM
+- **AI**: Google Gemini 1.5 Flash
+- **Containerization**: Docker & Docker Compose
 
-### 1. Prerequisites (Don't skip this!)
-Before you pull this code, make sure you have:
-*   **Python 3.10+**: Download from python.org. **CRITICAL:** During installation, you MUST check the box that says **"Add python.exe to PATH"** at the bottom of the screen.
-*   **Git:** Download Git for Windows (if on PC) so you can clone the repo.
+## Prerequisites
 
-### 2. Installation Steps
-Open your terminal (VS Code recommended) and run these commands:
+- Docker and Docker Compose installed
+- Google Gemini API key (get it from [Google AI Studio](https://makersuite.google.com/app/apikey))
 
-**Step 1: Clone the repository**
-~~~bash
-git clone https://github.com/YOUR-USERNAME/semicolon-sarathi.git
-cd semicolon-sarathi
-~~~
+## Quick Start
 
-**Step 2: Create a Virtual Environment**
-This keeps the project libraries separate from your main computer.
-~~~bash
-python -m venv venv
-~~~
+### 1. Clone the repository
 
-**Step 3: Activate the Virtual Environment**
-*   **Windows:** `venv\Scripts\activate`
-*   **Mac/Linux:** `source venv/bin/activate`
+```bash
+git clone <repository-url>
+cd gov-scheme-ai-assistant
+```
 
-**Step 4: Install Dependencies**
-~~~bash
-pip install streamlit google-generativeai
-~~~
+### 2. Set up environment variables
 
-**Step 5: Run the App!**
-~~~bash
-streamlit run app.py
-~~~
-*The app will automatically pop open in your default web browser.*
+Create a `.env` file in the root directory:
 
----
+```bash
+cp .env.example .env
+```
 
-## 🛠️ Troubleshooting (The "Windows" Traps)
+Edit `.env` and add your Gemini API key:
 
-We hit a few classic Windows environment errors while building this. If you run into issues, here are the exact fixes:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+DATABASE_URL=postgresql://postgres:postgres@db:5432/govassist
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_app_password
+REDIS_HOST=redis
+REDIS_PORT=6379
+```
 
-### ❌ Error 1: "Python was not found; run without arguments to install from the Microsoft Store..."
-*   **Why it happens:** Windows doesn't know where Python is installed.
-*   **The Fix:** You forgot to check "Add Python to PATH" during installation. Re-run the Python installer, select "Modify", and check that box!
+### 3. Start the application
 
-### ❌ Error 2: "Activate.ps1 cannot be loaded because running scripts is disabled on this system."
-*   **Why it happens:** Windows PowerShell blocks unauthorized scripts by default.
-*   **The Fix:** Run this command to temporarily bypass the security block for your current terminal session, then activate the environment:
-~~~powershell
-(Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned) ; (& .\venv\Scripts\Activate.ps1)
-~~~
+```bash
+# Stop any existing containers
+docker compose down -v
 
-### ❌ Error 3: The Rupee Symbol (₹) looks like garbled text (`â‚¹`) in the app.
-*   **Why it happens:** Windows sometimes reads files in local encoding instead of standard UTF-8. 
-*   **The Fix:** We already fixed this in the code by using `open('schemes.json', 'r', encoding='utf-8')`. If you add new schemes to the JSON file, make sure your text editor saves the file in UTF-8 format!
+# Start all services
+docker compose up --build
+```
 
-### ❌ Error 4: "git is not recognized as an internal or external command"
-*   **Why it happens:** You don't have Git installed on your computer. 
-*   **The Fix:** Go to git-scm.com and install it. Restart your VS Code entirely after installing.
+This will:
+- Start PostgreSQL database with health checks
+- Start Redis
+- Build and start the API server on port 8000 (with automatic Prisma setup)
+- Build and start the Next.js frontend on port 3000
+
+The API service will automatically:
+- Generate Prisma Client
+- Run database migrations
+- Start the server
+
+### 4. Access the application
+
+Open your browser and navigate to:
+- **Frontend**: http://localhost:3000
+- **API Health Check**: http://localhost:8000/health
+
+## Usage
+
+1. Fill in your profile information:
+   - Name (required)
+   - Email (optional - for notifications)
+   - Age (required)
+   - Gender (required)
+   - State (required)
+   - Occupation (required)
+   - Annual Income (required)
+   - Category (required): General/SC/ST/OBC/EWS
+   - Family Size (optional)
+
+2. Click "Find Eligible Schemes"
+
+3. The AI will search and display:
+   - Relevant government schemes
+   - Eligibility criteria
+   - Benefits
+   - Required documents
+   - Application process with official links
+
+## API Endpoints
+
+### User Management
+
+- `POST /api/users` - Create a new user profile
+- `GET /api/users/:id/schemes` - Get eligible schemes for a user
+
+### AI Chat
+
+- `POST /api/chat` - Chat with AI about government schemes
+
+### Health Check
+
+- `GET /health` - Check API server status
+
+## Development
+
+### Running without Docker
+
+#### Backend (API)
+
+```bash
+cd apps/api
+npm install
+npx prisma generate
+npx prisma migrate dev
+npm start
+```
+
+#### Frontend (Web)
+
+```bash
+cd apps/web
+npm install
+npm run dev
+```
+
+### Database Management
+
+```bash
+# Generate Prisma Client
+docker compose exec api npx prisma generate
+
+# Create a migration
+docker compose exec api npx prisma migrate dev --name migration_name
+
+# Open Prisma Studio (Database GUI)
+docker compose exec api npx prisma studio
+```
+
+## Project Structure
+
+```
+gov-scheme-ai-assistant/
+├── apps/
+│   ├── api/                    # Express API server
+│   │   ├── controllers/        # Request handlers
+│   │   ├── db/                 # Database connection
+│   │   ├── eligibility/        # Eligibility logic
+│   │   ├── notifications/      # Email service
+│   │   ├── prisma/            # Database schema & migrations
+│   │   ├── routes/            # API routes
+│   │   ├── scrapers/          # Web scrapers (future use)
+│   │   ├── services/          # AI service
+│   │   ├── workers/           # Background jobs
+│   │   └── server.js          # Main server file
+│   └── web/                   # Next.js frontend
+│       ├── app/               # App router pages
+│       └── components/        # React components
+├── docs/                      # Documentation
+├── docker-compose.yml         # Docker services configuration
+└── README.md                  # This file
+```
+
+## How It Works
+
+1. **User Profile Creation**: User submits their profile information through the web interface
+2. **AI Search**: The system uses Google Gemini AI to search for relevant government schemes based on the user's profile
+3. **Scheme Matching**: AI analyzes user eligibility for various schemes considering:
+   - Age criteria
+   - Income limits
+   - State/region
+   - Occupation
+   - Category (SC/ST/OBC/EWS/General)
+   - Gender
+4. **Results Display**: Comprehensive information about eligible schemes is displayed with:
+   - Scheme details
+   - Eligibility requirements
+   - Benefits
+   - Required documents
+   - Application links
+
+## Troubleshooting
+
+### Database Connection Issues
+
+```bash
+# Reset the database
+docker compose down -v
+docker compose up -d db
+docker compose exec api npx prisma migrate dev --name init
+```
+
+### API Not Responding
+
+```bash
+# Check API logs
+docker compose logs api
+
+# Restart API service
+docker compose restart api
+```
+
+### Frontend Build Issues
+
+```bash
+# Rebuild frontend
+docker compose up --build web
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+MIT License
+
+## Support
+
+For issues and questions, please open an issue on GitHub.
+
+## Acknowledgments
+
+- Government of India for providing scheme information
+- Google Gemini AI for powering the intelligent search
+- MyScheme.gov.in for scheme data reference
