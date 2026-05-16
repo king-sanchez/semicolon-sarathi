@@ -29,6 +29,11 @@ if st.button("Find Schemes"):
         json=payload
     )
 
+    if response.status_code != 200:
+    st.error(f"Backend Error: {response.status_code}")
+    st.text(response.text)
+    st.stop()
+
     data = response.json()
 
     st.subheader("AI Summary")
