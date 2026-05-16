@@ -1,13 +1,35 @@
-import requests
 import os
+from pathlib import Path
+
+import requests
+from dotenv import load_dotenv
+
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 AI_GATEWAY_URL = os.getenv("AI_GATEWAY_URL")
 AI_API_KEY = os.getenv("AI_API_KEY")
 AI_MODEL_NAME = os.getenv("AI_MODEL_NAME")
 
+PLACEHOLDER_VALUES = {
+    "paste_your_openai_api_key_here",
+    "your_openai_api_key_here",
+    "your_api_key_here",
+    "your_model_name_here",
+    "https://your-gateway-url.example/v1/chat/completions",
+}
+
+
+def is_configured(value):
+    return bool(value) and value.strip() not in PLACEHOLDER_VALUES
+
 
 def ask_ai(profile, schemes):
-    if not AI_GATEWAY_URL or not AI_API_KEY or not AI_MODEL_NAME:
+    if (
+        not is_configured(AI_GATEWAY_URL)
+        or not is_configured(AI_API_KEY)
+        or not is_configured(AI_MODEL_NAME)
+    ):
         return {
             "message": (
                 "AI explanation is unavailable because AI_GATEWAY_URL, "
