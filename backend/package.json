@@ -1,0 +1,42 @@
+{
+  "name": "govassist-api",
+  "scripts": {
+    "start": "node server.js",
+    "setup": "./setup.sh",
+    "db:generate": "npx prisma generate",
+    "db:migrate": "npx prisma migrate dev",
+    "db:seed": "node prisma/seed.js",
+    "db:studio": "npx prisma studio",
+    "embeddings:generate": "node scripts/generateEmbeddings.js",
+    "embeddings:force": "node scripts/generateEmbeddings.js --force",
+    "embeddings:batch": "node scripts/generateEmbeddings.js --batch-size=5",
+    "scrape:myscheme": "node scripts/scrapeAndImport.js --source=myscheme",
+    "scrape:all": "node scripts/scrapeAndImport.js --source=all",
+    "scrape:no-embeddings": "node scripts/scrapeAndImport.js --no-embeddings",
+    "seed:sample": "node scripts/seedSampleSchemes.js",
+    "knowledge:expand": "npm run scrape:all && npm run embeddings:generate",
+    "knowledge:stats": "node -e \"const prisma = require('./db/prisma'); prisma.scheme.count().then(t => prisma.scheme.count({where:{embedding:{not:null}}}).then(e => console.log('Total:',t,'| With embeddings:',e,'| Coverage:',((e/t)*100).toFixed(2)+'%') && process.exit(0)))\"",
+    "migrate:deploy": "npx prisma migrate deploy",
+    "migrate:resolve": "npx prisma migrate resolve --rolled-back 20240103000000_add_pgvector",
+    "migrate:fix": "node scripts/fixMigration.js"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "axios": "^1.16.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "openai": "^4.52.7",
+    "@google/generative-ai": "^0.21.0",
+    "@prisma/client": "^5.22.0",
+    "prisma": "^5.22.0",
+    "nodemailer": "^6.9.14",
+    "node-cron": "^3.0.3",
+    "bullmq": "^5.7.6",
+    "ioredis": "^5.4.1",
+    "playwright": "^1.46.0",
+    "cheerio": "^1.0.0"
+  }
+}
