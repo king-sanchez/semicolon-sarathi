@@ -1,12 +1,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import json
 from ai_client import ask_ai
+
+import json
+import os
+
+# ---------------------------------------------------
+# FastAPI App
+# ---------------------------------------------------
 
 app = FastAPI()
 
+# ---------------------------------------------------
 # CORS
+# ---------------------------------------------------
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,13 +24,38 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Health Check
+# ---------------------------------------------------
+# File Paths
+# ---------------------------------------------------
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+SCHEMES_PATH = os.path.join(
+    BASE_DIR,
+    "schemes.json"
+)
+
+# ---------------------------------------------------
+# Health Endpoint
+# ---------------------------------------------------
+
+@app.get("/")
+def root():
+    return {
+        "message": "Semicolon-Sarathi Backend Running"
+    }
+
+
 @app.get("/health")
 def health():
     return {
         "status": "ok",
         "service": "Semicolon-Sarathi Backend"
     }
+
+# ---------------------------------------------------
+# Request Model
+# ---------------------------------------------------
 
 class UserProfile(BaseModel):
     age: int
@@ -30,39 +64,58 @@ class UserProfile(BaseModel):
     category: str
     income: int
 
+# ---------------------------------------------------
+# Scheme Filtering Logic
+# ---------------------------------------------------
 
 def filter_schemes(user_data):
 
-    with open('schemes.json', 'r', encoding='utf-8') as f:
+    with open(
+        SCHEMES_PATH,
+        'r',
+        encoding='utf-8'
+    ) as f:
+
         schemes = json.load(f)
 
     results = []
 
     for s in schemes:
 
+        # Gender Match
         gender_match = (
             s['gender'] == "All"
-            or s['gender'].lower() == user_data.gender.lower()
+            or s['gender'].lower()
+            == user_data.gender.lower()
         )
 
+        # State Match
         state_match = (
             s['state'] == "All"
-            or s['state'].lower() == user_data.state.lower()
+            or s['state'].lower()
+            == user_data.state.lower()
         )
 
+        # Age Match
         age_match = (
-            s['age_min'] <= user_data.age <= s['age_max']
+            s['age_min']
+            <= user_data.age
+            <= s['age_max']
         )
 
+        # Category Match
         cat_match = (
             user_data.category.lower()
             in [c.lower() for c in s['category']]
         )
 
+        # Income Match
         income_match = (
-            user_data.income <= s['income_limit_inr']
+            user_data.income
+            <= s['income_limit_inr']
         )
 
+        # Final Eligibility
         if (
             gender_match
             and state_match
@@ -74,21 +127,31 @@ def filter_schemes(user_data):
 
     return results
 
+# ---------------------------------------------------
+# Recommendation Endpoint
+# ---------------------------------------------------
 
 @app.post("/recommend")
 async def recommend(profile: UserProfile):
 
     schemes = filter_schemes(profile)
 
+    # AI Summary
     try:
-        ai_response = ask_ai(profile, schemes)
 
-    except Exception:
+        ai_response = ask_ai(
+            profile,
+            schemes
+        )
+
+    except Exception as e:
+
         ai_response = {
             "message": (
                 "Matching schemes found successfully, "
                 "but AI explanation is currently unavailable."
-            )
+            ),
+            "error": str(e)
         }
 
     return {
