@@ -7,6 +7,13 @@ AI_MODEL_NAME = os.getenv("AI_MODEL_NAME")
 
 
 def ask_ai(profile, schemes):
+    if not AI_GATEWAY_URL or not AI_API_KEY or not AI_MODEL_NAME:
+        return {
+            "message": (
+                "AI explanation is unavailable because AI_GATEWAY_URL, "
+                "AI_API_KEY, or AI_MODEL_NAME is not configured."
+            )
+        }
 
     prompt = f"""
     User Profile:

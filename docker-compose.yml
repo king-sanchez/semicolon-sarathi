@@ -3,17 +3,23 @@ version: "3.9"
 services:
 
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: sarathi-backend
     ports:
       - "8001:8001"
-    env_file:
-      - .env
+    environment:
+      AI_GATEWAY_URL: ${AI_GATEWAY_URL:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL_NAME: ${AI_MODEL_NAME:-}
 
   frontend:
     build: ./frontend
     container_name: sarathi-frontend
     ports:
       - "8000:8000"
+    environment:
+      BACKEND_URL: http://backend:8001
     depends_on:
       - backend
