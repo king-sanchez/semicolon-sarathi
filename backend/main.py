@@ -1,9 +1,27 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import json
 from ai_client import ask_ai
 
 app = FastAPI()
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Health Check
+@app.get("/health")
+def health():
+    return {
+        "status": "ok",
+        "service": "Semicolon-Sarathi Backend"
+    }
 
 class UserProfile(BaseModel):
     age: int
@@ -14,12 +32,14 @@ class UserProfile(BaseModel):
 
 
 def filter_schemes(user_data):
+
     with open('schemes.json', 'r', encoding='utf-8') as f:
         schemes = json.load(f)
 
     results = []
 
     for s in schemes:
+
         gender_match = (
             s['gender'] == "All"
             or s['gender'].lower() == user_data.gender.lower()
@@ -60,7 +80,16 @@ async def recommend(profile: UserProfile):
 
     schemes = filter_schemes(profile)
 
-    ai_response = ask_ai(profile, schemes)
+    try:
+        ai_response = ask_ai(profile, schemes)
+
+    except Exception:
+        ai_response = {
+            "message": (
+                "Matching schemes found successfully, "
+                "but AI explanation is currently unavailable."
+            )
+        }
 
     return {
         "schemes": schemes,
