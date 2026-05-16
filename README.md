@@ -144,6 +144,8 @@ AI_MODEL_NAME=YOUR_MODEL_NAME
 
 ```bash
 docker compose up --build
+or
+docker-compose up --build
 ```
 
 ---
